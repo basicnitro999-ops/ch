@@ -40,9 +40,9 @@ async def on_ready():
 # --- 🔥 കിടിലൻ വെൽക്കം സിസ്റ്റം (WELCOME BOT EVENT) ---
 @bot.event
 async def on_member_join(member):
-    # നിന്റെ സെർവറിലെ ചാനലിന്റെ പേര് 'welcome' എന്നാണെന്ന് ഉറപ്പുവരുത്തുക
+    # നിന്റെ സെർവറിലെ ചാനലിന്റെ പേര് 'welcome' എന്നാണെന്ന് ഉറപ്പുവരുത്തു
     channel = discord.utils.get(member.guild.text_channels, name="✨︙𝗔rrivals")
-    
+   
     if channel:
         # മനോഹരമായ ഒരു എംബെഡ് ബോക്സ് വെൽക്കം മെസ്സേജ്
         embed = discord.Embed(
