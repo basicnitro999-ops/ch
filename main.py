@@ -18,7 +18,7 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# ഡിസ്കോർഡ് ഇന്റന്റുകൾ (നിർബന്ധമായും members ഇന്റന്റ് ട്രൂ ആയിരിക്കണം)
+# ഡിസ്കോർഡ് ഇന്റന്റുകൾ (നിർബന്ധമായും members, message_content ഇന്റന്റുകൾ ഓൺ ആയിരിക്കണം)
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -37,48 +37,89 @@ async def on_ready():
         print(f"Failed to sync commands: {e}")
 
 
-# --- 🔥 കിടിലൻ വെൽക്കം സിസ്റ്റം (WELCOME BOT EVENT) ---
+# --- 🔥 കിടിലൻ വെൽക്കം സിസ്റ്റം (WELCOME BOT EVENT WITH PING) ---
 @bot.event
 async def on_member_join(member):
-    # നിന്റെ സെർവറിലെ ചാനലിന്റെ പേര് 'welcome' എന്നാണെന്ന് ഉറപ്പുവരുത്തു
+    # നിങ്ങളുടെ ചാനലിന്റെ പേര് ഇവിടെ മാറ്റാം. ഇപ്പോൾ '【👋】welcome-bye' എന്നാണ് നൽകിയിരിക്കുന്നത്.
     channel = discord.utils.get(member.guild.text_channels, name="✨︙𝗔rrivals")
-   
+    
     if channel:
         # മനോഹരമായ ഒരു എംബെഡ് ബോക്സ് വെൽക്കം മെസ്സേജ്
         embed = discord.Embed(
-            title="💫 കേറി വാടാ മക്കളെ",
+            title="👋 Welcome to the Server!",
             description=f"Hey {member.mention}, welcome to **{member.guild.name}**! 🎉\n\nWe are extremely happy to have you here. Make sure to check out the rules and have a great time!",
             color=0x00ff00  # പച്ച കളർ
         )
         
-        # ജോയിൻ ചെയ്ത ആളുടെ പ്രൊഫൈൽ പിക്ചറും സെർവറിലെ ആകെ മെമ്പർമാരുടെ എണ്ണവും കാണിക്കാൻ
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         embed.set_footer(text=f"Member #{len(member.guild.members)}")
         
-        # ചാനലിലേക്ക് മെസ്സേജ് അയക്കുന്നു
-        await channel.send(f"Welcome {member.mention}! ✨", embed=embed)
+        # പുതിയ ആളെയും ഒപ്പം @everyone-യും പിങ് ചെയ്ത് എംബെഡ് മെസ്സേജ് അയക്കുന്നു
+        await channel.send(f"Welcome {member.mention}! ✨ @everyone", embed=embed)
 
 
 # --- 1. SLASH COMMAND: INFO ---
 @bot.tree.command(name="info", description="View all available bot commands")
 async def info(interaction: discord.Interaction):
-    # ഇവിടെ 'CHIRAPUNJI BOT' എന്ന് മാറ്റിയിട്ടുണ്ട്
     embed = discord.Embed(title="CHIRAPUNJI BOT", description="Server Management & Ticket Slash Commands:", color=0x00ff00)
     embed.add_field(name="/info", value="Check all available commands", inline=False)
     embed.add_field(name="/ping", value="Check if the bot is online and active", inline=False)
+    embed.add_field(name="/say [message] [ping_everyone]", value="Send a normal message through the bot (Admin Only)", inline=False)
     embed.add_field(name="/clear [amount]", value="Delete multiple messages instantly (Admin Only)", inline=False)
     embed.add_field(name="/kick [user] [reason]", value="Kick a user from the server (Admin Only)", inline=False)
     embed.add_field(name="/ban [user] [reason]", value="Ban a user from the server (Admin Only)", inline=False)
-    embed.add_field(name="/announce [message]", value="Create a beautiful announcement box (Admin Only)", inline=False)
+    embed.add_field(name="/announce [message] [ping_role] [ping_everyone]", value="Create an announcement box with custom ping (Admin Only)", inline=False)
     embed.add_field(name="/setup_ticket", value="Setup the private support ticket system (Admin Only)", inline=False)
     await interaction.response.send_message(embed=embed)
+
 
 # --- 2. SLASH COMMAND: PING ---
 @bot.tree.command(name="ping", description="Check bot status")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("⚡ Bot is fully active and running smooth!")
 
-# --- 3. SLASH COMMAND: CLEAR ---
+
+# --- 3. NEW SLASH COMMAND: SAY (With Ping Option) ---
+@bot.tree.command(name="say", description="Send a normal message through the bot (Admin Only)")
+@discord.app_commands.checks.has_permissions(administrator=True)
+async def say(interaction: discord.Interaction, message: str, ping_everyone: bool = False):
+    # കമാൻഡ് ഉപയോഗിച്ചയാൾക്ക് മാത്രം കാണാൻ ചെറിയൊരു കൺഫർമേഷൻ
+    await interaction.response.send_message("Message sent!", ephemeral=True)
+    
+    if ping_everyone:
+        await interaction.channel.send(f"@everyone {message}")
+    else:
+        await interaction.channel.send(message)
+
+
+# --- 4. SLASH COMMAND: ANNOUNCE (With Role/Everyone Ping Option) ---
+@bot.tree.command(name="announce", description="Create a beautiful announcement box with ping (Admin Only)")
+@discord.app_commands.checks.has_permissions(administrator=True)
+async def announce(interaction: discord.Interaction, message_content: str, ping_role: discord.Role = None, ping_everyone: bool = False):
+    await interaction.response.send_message("Announcement sent!", ephemeral=True)
+    
+    embed = discord.Embed(
+        title="📢 New Announcement!",
+        description=message_content,
+        color=0xff0000
+    )
+    embed.set_footer(text=f"Announced by {interaction.user.name}")
+    
+    # ആരെയാണ് പിങ് ചെയ്യേണ്ടതെന്ന് തീരുമാനിക്കുന്നു
+    ping_text = ""
+    if ping_everyone:
+        ping_text = "@everyone"
+    elif ping_role:
+        ping_text = ping_role.mention
+
+    # പിങ് ടെക്സ്റ്റും ബോക്സും ഒരുമിച്ച് അയക്കുന്നു
+    if ping_text:
+        await interaction.channel.send(content=ping_text, embed=embed)
+    else:
+        await interaction.channel.send(embed=embed)
+
+
+# --- 5. SLASH COMMAND: CLEAR ---
 @bot.tree.command(name="clear", description="Delete messages from the channel (Admin Only)")
 @discord.app_commands.checks.has_permissions(manage_messages=True)
 async def clear(interaction: discord.Interaction, amount: int):
@@ -86,32 +127,21 @@ async def clear(interaction: discord.Interaction, amount: int):
     deleted = await interaction.channel.purge(limit=amount)
     await interaction.followup.send(f"🧹 Successfully deleted {len(deleted)} messages!", ephemeral=True)
 
-# --- 4. SLASH COMMAND: KICK ---
+
+# --- 6. SLASH COMMAND: KICK ---
 @bot.tree.command(name="kick", description="Kick a member from the server (Admin Only)")
 @discord.app_commands.checks.has_permissions(kick_members=True)
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = None):
     await member.kick(reason=reason)
     await interaction.response.send_message(f"👢 {member.mention} has been kicked! Reason: {reason}")
 
-# --- 5. SLASH COMMAND: BAN ---
+
+# --- 7. SLASH COMMAND: BAN ---
 @bot.tree.command(name="ban", description="Ban a member from the server (Admin Only)")
 @discord.app_commands.checks.has_permissions(ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = None):
     await member.ban(reason=reason)
     await interaction.response.send_message(f"🔨 {member.mention} has been permanently banned! Reason: {reason}")
-
-# --- 6. SLASH COMMAND: ANNOUNCE ---
-@bot.tree.command(name="announce", description="Create a beautiful announcement box (Admin Only)")
-@discord.app_commands.checks.has_permissions(administrator=True)
-async def announce(interaction: discord.Interaction, message_content: str):
-    embed = discord.Embed(
-        title="📢 New Announcement!",
-        description=message_content,
-        color=0xff0000
-    )
-    embed.set_footer(text=f"Announced by {interaction.user.name}")
-    await interaction.response.send_message("Announcement sent!", ephemeral=True)
-    await interaction.channel.send(embed=embed)
 
 
 # --- TICKET SYSTEM BUTTONS ---
@@ -157,7 +187,8 @@ class TicketSetupView(discord.ui.View):
         await ticket_channel.send(embed=embed, view=TicketCloseView())
         await interaction.response.send_message(f"✅ Ticket created! Go to {ticket_channel.mention}", ephemeral=True)
 
-# --- 7. SLASH COMMAND: SETUP TICKET ---
+
+# --- 8. SLASH COMMAND: SETUP TICKET ---
 @bot.tree.command(name="setup_ticket", description="Setup the private support ticket box (Admin Only)")
 @discord.app_commands.checks.has_permissions(administrator=True)
 async def setup_ticket(interaction: discord.Interaction):
