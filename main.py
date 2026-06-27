@@ -18,7 +18,7 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# ഡിസ്കോർഡ് ഇന്റന്റുകൾ (നിർബന്ധമായും members, message_content ഇന്റന്റുകൾ ഓൺ ആയിരിക്കണം)
+# ഡിസ്കോർഡ് ഇന്റന്റുകൾ
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -37,25 +37,24 @@ async def on_ready():
         print(f"Failed to sync commands: {e}")
 
 
-# --- 🔥 കിടിലൻ വെൽക്കം സിസ്റ്റം (WELCOME BOT EVENT WITH PING) ---
+# --- 🔥 കിടിലൻ വെൽക്കം സിസ്റ്റം ---
 @bot.event
 async def on_member_join(member):
-    # നിങ്ങളുടെ ചാനലിന്റെ പേര് ഇവിടെ മാറ്റാം. ഇപ്പോൾ '【👋】welcome-bye' എന്നാണ് നൽകിയിരിക്കുന്നത്.
     channel = discord.utils.get(member.guild.text_channels, name="✨︙𝗔rrivals")
     
     if channel:
-        # മനോഹരമായ ഒരു എംബെഡ് ബോക്സ് വെൽക്കം മെസ്സേജ്
         embed = discord.Embed(
-            title="👋 Welcome to the Server!",
+            title="✨ കേറി വാടാ മക്കളെ",
             description=f"Hey {member.mention}, welcome to **{member.guild.name}**! 🎉\n\nWe are extremely happy to have you here. Make sure to check out the rules and have a great time!",
-            color=0x00ff00  # പച്ച കളർ
+            color=0x00ff00
         )
         
         embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         embed.set_footer(text=f"Member #{len(member.guild.members)}")
         
-        # പുതിയ ആളെയും ഒപ്പം @everyone-യും പിങ് ചെയ്ത് എംബെഡ് മെസ്സേജ് അയക്കുന്നു
-        await channel.send(f"Welcome {member.mention}, embed=embed)
+        # ഇവിടെയുണ്ടായിരുന്ന കോട്ടേഷൻ എറർ പൂർണ്ണമായി ശരിയാക്കിയിട്ടുണ്ട്
+        await channel.send(content=f"Welcome {member.mention}", embed=embed)
+
 
 # --- 1. SLASH COMMAND: INFO ---
 @bot.tree.command(name="info", description="View all available bot commands")
@@ -78,11 +77,10 @@ async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("⚡ Bot is fully active and running smooth!")
 
 
-# --- 3. NEW SLASH COMMAND: SAY (With Ping Option) ---
+# --- 3. SLASH COMMAND: SAY ---
 @bot.tree.command(name="say", description="Send a normal message through the bot (Admin Only)")
 @discord.app_commands.checks.has_permissions(administrator=True)
 async def say(interaction: discord.Interaction, message: str, ping_everyone: bool = False):
-    # കമാൻഡ് ഉപയോഗിച്ചയാൾക്ക് മാത്രം കാണാൻ ചെറിയൊരു കൺഫർമേഷൻ
     await interaction.response.send_message("Message sent!", ephemeral=True)
     
     if ping_everyone:
@@ -91,7 +89,7 @@ async def say(interaction: discord.Interaction, message: str, ping_everyone: boo
         await interaction.channel.send(message)
 
 
-# --- 4. SLASH COMMAND: ANNOUNCE (With Role/Everyone Ping Option) ---
+# --- 4. SLASH COMMAND: ANNOUNCE ---
 @bot.tree.command(name="announce", description="Create a beautiful announcement box with ping (Admin Only)")
 @discord.app_commands.checks.has_permissions(administrator=True)
 async def announce(interaction: discord.Interaction, message_content: str, ping_role: discord.Role = None, ping_everyone: bool = False):
@@ -104,14 +102,12 @@ async def announce(interaction: discord.Interaction, message_content: str, ping_
     )
     embed.set_footer(text=f"Announced by {interaction.user.name}")
     
-    # ആരെയാണ് പിങ് ചെയ്യേണ്ടതെന്ന് തീരുമാനിക്കുന്നു
     ping_text = ""
     if ping_everyone:
         ping_text = "@everyone"
     elif ping_role:
         ping_text = ping_role.mention
 
-    # പിങ് ടെക്സ്റ്റും ബോക്സും ഒരുമിച്ച് അയക്കുന്നു
     if ping_text:
         await interaction.channel.send(content=ping_text, embed=embed)
     else:
