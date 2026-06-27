@@ -55,8 +55,7 @@ async def on_member_join(member):
         embed.set_footer(text=f"Member #{len(member.guild.members)}")
         
         # പുതിയ ആളെയും ഒപ്പം @everyone-യും പിങ് ചെയ്ത് എംബെഡ് മെസ്സേജ് അയക്കുന്നു
-        await channel.send(f"Welcome {member.mention}! ✨ @everyone", embed=embed)
-
+        await channel.send(f"Welcome {member.mention}, embed=embed)
 
 # --- 1. SLASH COMMAND: INFO ---
 @bot.tree.command(name="info", description="View all available bot commands")
